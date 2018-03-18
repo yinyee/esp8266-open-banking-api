@@ -20,6 +20,7 @@ String proxyUrl = "https://santandeverywhere.factern.com/";
 String proxyUrlHttp = "http://santandeverywhere.factern.com/";
 String ownBankIdString = "santander.01.uk.sanuk";
 String ownAccountIdString = "asdf0123";
+String username = "kosmond";
 String ownId = "car";
 String auth_tokenised = "DirectLogin token=\"";
 String hardToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyIiOiIifQ.PJ_ORqCJKK6zbiAwu0LPm-kR1sMdU-OJnd7MIkjCHWk";
@@ -83,7 +84,7 @@ void handleRoot() {
 
 void handleTransactionRequest() {
 
-  digitalWrite(LED_BUILTIN, LOW); 
+  digitalWrite(LED_BUILTIN, LOW);
   Serial.println(server.arg("plain"));
   
   JsonObject& root = parseJson(server.arg("plain"));
@@ -158,16 +159,17 @@ String login() {
   return tokenString;
 }
 
-JsonObject& checkBalance() {
+void checkBalance() {
 
   Serial.println("=== Check account balance ===");
-  url = proxyUrlHttp + "my/banks/" + ownBankIdString + "/accounts/" + ownAccountIdString + "/" + ownId + "/account";
+//  url = proxyUrlHttp + "my/banks/" + ownBankIdString + "/accounts/" + ownAccountIdString + "/" + ownId + "/account";
+  url = proxyUrlHttp + username + "/accounts/" + ownId + "/account";
   Serial.println(url);
 
   HTTPClient http;
-  http.begin(url, proxyFingerprint);
+//  http.begin(url, proxyFingerprint);
   http.begin(url);
-  http.addHeader("Authorization", auth_tokenised);
+//  http.addHeader("Authorization", auth_tokenised);
   int httpCode = http.GET();
   String response = http.getString();
   Serial.println(httpCode);
@@ -175,15 +177,15 @@ JsonObject& checkBalance() {
   Serial.println(response);
   http.end();
 
-//  // Get account details
-//  JsonObject& getAccountRoot = parseJson(response);
-//  const char* currency = getAccountRoot["balance"]["currency"];
-//  String currencyString(currency);
-//  const char* balance = getAccountRoot["balance"]["amount"];
-//  String balanceString(balance);
-//  Serial.println("balance: " + currencyString + " " + balanceString);
+  // Get account details
+  JsonObject& getAccountRoot = parseJson(response);
+  const char* currency = getAccountRoot["balance"]["currency"];
+  String currencyString(currency);
+  const char* balance = getAccountRoot["balance"]["amount"];
+  String balanceString(balance);
+  Serial.println("balance: " + currencyString + " " + balanceString);
 
-  return parseJson(response);
+//  return parseJson(response);
 }
 
 String makePayment(String payeeBankId, String payeeAccountId, String currency, String amount) {
@@ -192,7 +194,7 @@ String makePayment(String payeeBankId, String payeeAccountId, String currency, S
   
   HTTPClient httpClient;
 
-  url = proxyUrlHttp + "banks/" + ownBankIdString + "/accounts/" + ownAccountIdString + "/" + ownId + "/owner/transaction-request-types/SANDBOX_TAN/transaction-requests";
+  url = proxyUrlHttp + username + "/accounts/" + ownId + "/transaction";
   httpClient.begin(url);
 //  url = baseUrl + "banks/" + ownBankIdString + "/accounts/" + ownAccountIdString + "/owner/transaction-request-types/SANDBOX_TAN/transaction-requests";
 //  httpClient.begin(url, fingerprint);
@@ -237,6 +239,7 @@ String makePayment(String payeeBankId, String payeeAccountId, String currency, S
 void loop() {
   
   server.handleClient();
+  checkBalance();
   Serial.println("looping...");
   delay(10000);
   

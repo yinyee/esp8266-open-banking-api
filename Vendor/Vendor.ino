@@ -35,6 +35,7 @@ void setup() {
   
   pinMode(5, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
+  digitalWrite(LED_BUILTIN, HIGH);
   
   WiFi.begin("Huckletree", "staycurious16");
   
@@ -172,12 +173,14 @@ String getIpAddress() {
     response = httpClient.getString();
     Serial.println("GET " + ipString + ": " + httpCode + " " + httpClient.errorToString(httpCode) + " " + response);
   }
+  httpClient.end();
   return response;
 }
 
 void requestPayment() {
   
   Serial.println("=== Request Payment ===");
+  digitalWrite(LED_BUILTIN, LOW);
   
   HTTPClient httpClient;
   url = "http://" + getIpAddress() + "/";
@@ -202,9 +205,17 @@ void requestPayment() {
   Serial.println(httpClient.errorToString(httpCode));
   Serial.println(response);
   if(response != "LIMIT REACHED" && response != "DUMMY RESPONSE") {
-    // blink vigorously
+    int blinks = 10;
+    while(blinks > 0) {
+      digitalWrite(LED_BUILTIN, LOW);
+      delay(100);
+      digitalWrite(LED_BUILTIN, HIGH);
+      delay(100);
+      blinks--;
+    }
   }
   httpClient.end();
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void loop() {
